@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>俄罗斯轮盘 - 多人版</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .game-container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .stats {
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        .revolver {
+            width: 400px;
+            height: 300px;
+            margin: 20px auto;
+        }
+        .gun-body {
+            transition: all 0.3s;
+        }
+        .cylinder-group {
+            transition: transform 1s;
+        }
+        .cylinder {
+            transition: transform 1s;
+        }
+        .cylinder-back {
+            filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.3));
+        }
+        .cylinder-center {
+            filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.2));
+        }
+        #chambers {
+            transition: transform 1s;
+        }
+        .chamber {
+            transition: all 0.3s;
+            filter: drop-shadow(0px 1px 1px rgba(0, 0, 0, 0.4)) inset;
+        }
+        .hammer {
+            transform-origin: 195px 150px;
+            transition: transform 0.2s;
+        }
+        .trigger {
+            transform-origin: 150px 170px;
+            transition: transform 0.2s;
+        }
+        .shoot-animation .hammer {
+            animation: hammer-strike 0.2s ease-in-out;
+        }
+        .shoot-animation .trigger {
+            animation: trigger-pull 0.2s ease-in-out;
+        }
+        @keyframes hammer-strike {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(-30deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes trigger-pull {
+            0% { transform: rotate(0deg); }
+            50% { transform: rotate(10deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .chamber.active {
+            fill: #ff0000;
+            filter: drop-shadow(0 0 5px #ff0000);
+        }
+        .grip-texture {
+            pointer-events: none;
+        }
+        /* 添加金属光泽效果 */
+        .cylinder:hover, .barrel:hover {
+            filter: brightness(1.2);
+        }
+        /* 改进阴影效果 */
+        .gun-body, .handle, .trigger-group {
+            filter: drop-shadow(2px 2px 3px rgba(0,0,0,0.3));
+        }
+        .player-setup {
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .player-list {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 5px;
+        }
+        
+        .player-item {
+            padding: 5px 10px;
+            margin: 5px 0;
+            background-color: #fff;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .player-item:hover {
+            background-color: #e8e8e8;
+        }
+        
+        .player-item.current {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .game-controls {
+            display: none;
+        }
+        
+        .setup-controls {
+            margin: 20px 0;
+        }
+        
+        input[type="number"], input[type="text"] {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .message {
+            color: #666;
+            font-style: italic;
+        }
+        
+        .dead {
+            text-decoration: line-through;
+            color: #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>俄罗斯轮盘 - 多人版</h1>
+        
+        <!-- 游戏设置界面 -->
+        <div class="setup-controls">
+            <input type="number" 
+                   id="playerCount" 
+                   min="2" 
+                   max="10" 
+                   placeholder="输入玩家人数（2-10人）" 
+                   value="2"
+                   required>
+            <button id="startSetup">开始设置</button>
+        </div>
+        
+        <!-- 玩家设置界面 -->
+        <div class="player-setup" style="display: none;">
+            <input type="text" id="playerName" placeholder="输入玩家名字">
+            <button id="addPlayer">添加玩家</button>
+            <div class="player-list"></div>
+            <button id="startGame">开始游戏</button>
+        </div>
+        
+        <!-- 游戏界面 -->
+        <div class="game-controls" style="display: none;">
+            <div class="revolver">
+                <!-- 删除 SVG 图画 -->
+            </div>
+            <p class="message">当前回合：<span id="currentPlayer"></span></p>
+            <button id="shootButton" class="shoot-button" disabled>扣动扳机</button>
+            <div id="result"></div>
+            <div class="player-list" id="activePlayers"></div>
+        </div>
+        
+        <button id="restartGame" style="display: none;">重新开始</button>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
